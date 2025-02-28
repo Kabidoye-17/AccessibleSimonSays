@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Scores</title>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;600;700&family=Comic+Neue:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Comic Neue', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #648FFF 0%, #785EF0 100%);
+            color: black;
+            font-size: 18px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 35px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            border: none;
+        }
+        .header {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #648FFF;
+            font-size: 3em;
+            margin-bottom: 30px;
+        }
+        input[type="date"] {
+            padding: 15px 25px;
+            border: 2px solid #648FFF;
+            border-radius: 15px;
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 1.2em;
+            margin: 25px 0;
+            background: white;
+            color: black;
+            font-weight: bold;
+        }
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #785EF0;
+            box-shadow: 0 0 0 3px rgba(100, 143, 255, 0.2);
+        }
+        .button {
+            display: inline-block;
+            background: #648FFF;
+            color: white;
+            padding: 15px 35px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: bold;
+            font-size: 1.3em;
+            transition: all 0.3s;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .button:hover, .button:focus {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+            background: #DC267F;
+        }
+        .date-selector {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .date-selector label {
+            display: block;
+            font-family: 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 2.4em;
+            color: #DC267F;
+        }
+        .table-header {
+            display: grid;
+            grid-template-columns: minmax(100px, 1fr) minmax(100px, 1fr) minmax(150px, 1fr);
+            gap: 10px;
+            padding: 0 20px;
+            margin-bottom: 10px;
+        }
+        .table-header > div {
+            background-color: #648FFF;
+            color: white;
+            padding: 18px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            text-align: center;
+            border: none;
+            font-size: 1.3em;
+        }
+        .scores-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding: 25px;
+        }
+        .score-row {
+            display: grid;
+            grid-template-columns: minmax(100px, 1fr) minmax(100px, 1fr) minmax(150px, 1fr);
+            gap: 10px;
+        }
+        .score-card {
+            background: white;
+            border-radius: 10px;
+            padding: 18px 25px;
+            border: 2px solid #648FFF;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-align: center;
+            color: black;
+            font-size: 1.2em;
+        }
+        .score-row:nth-child(even) .score-card {
+            background: rgba(100, 143, 255, 0.1);
+        }
+        .score-card:hover, .score-card:focus {
+            transform: translateY(-2px);
+            border-color: #DC267F;
+            background: white;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        .score-position {
+            color: #DC267F;
+            font-weight: bold;
+            font-size: 1.5em;
+        }
+        .score-value {
+            color: #648FFF;
+            font-weight: bold;
+            font-size: 1.4em;
+        }
+        .score-time {
+            color: #666666;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+        .score-card:nth-child(3n-2):hover { /* Position cards */
+            border-color: #DC267F;
+        }
+        .score-card:nth-child(3n-1):hover { /* Score cards */
+            border-color: #785EF0;
+        }
+        .score-card:nth-child(3n):hover { /* Time cards */
+            border-color: #648FFF;
+        }
+    </style>
+</head>
+<body>
+    <main id="main">
+        <div class="container" role="region" aria-label="Daily Scores">
+            <div class="header">
+                <h1> Daily Scores </h1>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <a href="/top_scores_page" class="button">View All-Time Top Scores</a>
+                </div>
+            </div>
+            <div class="date-selector">
+                <label dateSelect>Select Date:</label>
+                <input type="date" id="dateSelect" 
+                       onchange="loadDailyScores(this.value)"
+                       aria-label="Select date to view scores">
+            </div>
+            <div class="table-header">
+                <div>Position</div>
+                <div>Score</div>
+                <div>Time</div>
+            </div>
+            <div class="scores-grid" role="grid" id="scoresGrid">
+                <!-- Cards will be inserted here -->
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString();
+        }
+
+        function loadDailyScores(date) {
+            fetch(`/get_daily_scores?date=${date}`)
+                .then(response => response.json())
+                .then(data => {
+                    const scoresGrid = document.getElementById('scoresGrid');
+                    scoresGrid.innerHTML = '';
+                    
+                    if (data.scores.length === 0) {
+                        scoresGrid.innerHTML = `
+                            <div class="score-row">
+                                <div class="score-card" tabindex="0" role="gridcell" colspan="3"
+                                     aria-label="No scores found for this date">
+                                    No scores found for this date
+                                </div>
+                            </div>
+                        `;
+                        return;
+                    }
+                    
+                    data.scores.forEach((score, index) => {
+                        const row = document.createElement('div');
+                        row.className = 'score-row';
+                        row.innerHTML = `
+                            <div class="score-card" tabindex="0" role="gridcell"
+                                 aria-label="Position ${index + 1}">
+                                <div class="score-position">#${index + 1}</div>
+                            </div>
+                            <div class="score-card" tabindex="0" role="gridcell"
+                                 aria-label="Score ${score.score}">
+                                <div class="score-value">${score.score}</div>
+                            </div>
+                            <div class="score-card" tabindex="0" role="gridcell"
+                                 aria-label="Time ${formatTime(score.timestamp)}">
+                                <div class="score-time">${formatTime(score.timestamp)}</div>
+                            </div>
+                        `;
+                        scoresGrid.appendChild(row);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    const scoresGrid = document.getElementById('scoresGrid');
+                    scoresGrid.innerHTML = `
+                        <div class="score-card" tabindex="0" role="gridcell"
+                             aria-label="Error loading scores">
+                            Error loading scores. Please try again.
+                        </div>
+                    `;
+                });
+        }
+
+        // Set default date to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('dateSelect').value = today;
+        loadDailyScores(today);
+
+        const evtSource = new EventSource('/score_stream');
+        
+        evtSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            updateScoresDisplay(data);  // Make sure you have this function defined
+        };
+
+        evtSource.onerror = function(err) {
+            console.error("EventSource failed:", err);
+            evtSource.close();
+        };
+
+        // Clean up EventSource when leaving the page
+        window.addEventListener('beforeunload', () => {
+            evtSource.close();
+        });
+    </script>
+</body>
+</html>

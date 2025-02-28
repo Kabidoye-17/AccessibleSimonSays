@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Memory Game Scores</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Memory Game Leaderboard</h1>
+    <form id="scoreForm">
+        <input type="text" id="name" placeholder="Enter your name" required>
+        <input type="number" id="score" placeholder="Enter your score" required>
+        <button type="submit">Submit Score</button>
+    </form>
+    
+    <h2>Top Scores</h2>
+    <ul id="scoreList"></ul>
+
+    <script>
+        const form = document.getElementById('scoreForm');
+        const scoreList = document.getElementById('scoreList');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const score = document.getElementById('score').value;
+
+            await fetch('/submit_score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, score })
+            });
+
+            loadScores();
+        });
+
+        async function loadScores() {
+            const response = await fetch('/scores');
+            const scores = await response.json();
+            scoreList.innerHTML = scores.map(s => `<li>${s.name}: ${s.score}</li>`).join('');
+        }
+
+        loadScores();
+    </script>
+</body>
+</html>
