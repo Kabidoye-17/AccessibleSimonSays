@@ -52,8 +52,8 @@ int digit[10][7] = {
   {0, 0, 0, 1, 1, 0, 0}  // 9
 };
 
-int pinOrder[5];
-int userOrder[5];
+int pinOrder[9];
+int userOrder[9];
 
 // define game
 int gameRound = 1;
@@ -215,7 +215,7 @@ void sendGameResult(int score) {
 
 // define how the game is to be ran
 void runGame() {
-  while (gameRound < 4) {
+  while (gameRound < 9) {
     // Display pattern
     int pinIndex = rand() % 3;
     pinOrder[gameRound] = LEDPins[pinIndex];
@@ -325,7 +325,7 @@ void runGame() {
     }
   }
 
-  if (gameRound == 4 && userIsCorrect) {
+  if (gameRound == 9 && userIsCorrect) {
     Serial.println("YOU WIN! 🎉");
     victoryBuzz();
     sendGameResult(gameRound);

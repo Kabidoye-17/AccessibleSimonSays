@@ -184,56 +184,66 @@
             return date.toLocaleString();
         }
 
-        function updateScores() {
+        function updateScoresGrid(scores) {
+            const scoresGrid = document.getElementById('scoresGrid');
+            
+            if (!scores || scores.length === 0) {
+                scoresGrid.innerHTML = '<div class="score-row">No scores available</div>';
+                return;
+            }
+
+            const currentHtml = scoresGrid.innerHTML;
+            const newHtml = scores.map((score, index) => `
+                <div class="score-row">
+                    <div class="score-card" tabindex="0" role="gridcell"
+                        aria-label="Position ${index + 1}">
+                        <div class="score-position">#${index + 1}</div>
+                    </div>
+                    <div class="score-card" tabindex="0" role="gridcell"
+                        aria-label="Score ${score.score}">
+                        <div class="score-value">${score.score}</div>
+                    </div>
+                    <div class="score-card" tabindex="0" role="gridcell"
+                        aria-label="Time ${formatDateTime(score.timestamp)}">
+                        <div class="score-time">${formatDateTime(score.timestamp)}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            if (currentHtml !== newHtml) {
+                scoresGrid.innerHTML = newHtml;
+            }
+        }
+
+        function initializeScoreStream() {
             const eventSource = new EventSource('/score_stream');
 
             eventSource.onmessage = function(event) {
                 const data = JSON.parse(event.data);
-                const scoresGrid = document.getElementById('scoresGrid');
-                
-                // Avoid unnecessary re-renders
-                if (scoresGrid.children.length === data.top_scores.length) {
-                    data.top_scores.forEach((score, index) => {
-                        const row = scoresGrid.children[index];
-
-                        row.children[0].querySelector('.score-position').textContent = `#${index + 1}`;
-                        row.children[1].querySelector('.score-value').textContent = score.score;
-                        row.children[2].querySelector('.score-time').textContent = formatDateTime(score.timestamp);
-                    });
-                } else {
-                    // Full re-render only when necessary
-                    scoresGrid.innerHTML = '';
-                    data.top_scores.forEach((score, index) => {
-                        const row = document.createElement('div');
-                        row.className = 'score-row';
-                        row.innerHTML = `
-                            <div class="score-card" tabindex="0" role="gridcell"
-                                aria-label="Position ${index + 1}">
-                                <div class="score-position">#${index + 1}</div>
-                            </div>
-                            <div class="score-card" tabindex="0" role="gridcell"
-                                aria-label="Score ${score.score}">
-                                <div class="score-value">${score.score}</div>
-                            </div>
-                            <div class="score-card" tabindex="0" role="gridcell"
-                                aria-label="Time ${formatDateTime(score.timestamp)}">
-                                <div class="score-time">${formatDateTime(score.timestamp)}</div>
-                            </div>
-                        `;
-                        scoresGrid.appendChild(row);
-                    });
-                }
+                updateScoresGrid(data.top_scores);
             };
 
-        eventSource.onerror = function(error) {
-            console.error('EventSource failed:', error);
-            eventSource.close();
-            setTimeout(updateScores, 5000); // Try to reconnect after 5 seconds
-        };
-    }
+            eventSource.onerror = function(error) {
+                console.error('EventSource failed:', error);
+                eventSource.close();
+                // Try to reconnect after 5 seconds
+                setTimeout(() => {
+                    const newEventSource = new EventSource('/score_stream');
+                    eventSource.onmessage = function(event) {
+                        const data = JSON.parse(event.data);
+                        updateScoresGrid(data.top_scores);
+                    };
+                }, 5000);
+            };
 
-        // Start updates when page loads
-        updateScores();
+            // Clean up on page unload
+            window.addEventListener('beforeunload', () => {
+                eventSource.close();
+            });
+        }
+
+        // Initialize the score stream when the page loads
+        initializeScoreStream();
     </script>
 </body>
 </html>

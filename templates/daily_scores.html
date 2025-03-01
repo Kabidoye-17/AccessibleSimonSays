@@ -190,44 +190,54 @@
             return date.toLocaleTimeString();
         }
 
+        function updateScores(scores) {
+            const scoresGrid = document.getElementById('scoresGrid');
+            const currentDate = document.getElementById('dateSelect').value;
+            
+            const dailyScores = scores.filter(score => {
+                const scoreDate = new Date(score.timestamp).toISOString().split('T')[0];
+                return scoreDate === currentDate;
+            });
+
+            if (dailyScores.length === 0) {
+                scoresGrid.innerHTML = `
+                    <div class="score-row">
+                        <div class="score-card" tabindex="0" role="gridcell" colspan="3"
+                             aria-label="No scores found for this date">
+                            No scores found for this date
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            scoresGrid.innerHTML = '';
+            dailyScores.forEach((score, index) => {
+                const row = document.createElement('div');
+                row.className = 'score-row';
+                row.innerHTML = `
+                    <div class="score-card" tabindex="0" role="gridcell"
+                         aria-label="Position ${index + 1}">
+                        <div class="score-position">#${index + 1}</div>
+                    </div>
+                    <div class="score-card" tabindex="0" role="gridcell"
+                         aria-label="Score ${score.score}">
+                        <div class="score-value">${score.score}</div>
+                    </div>
+                    <div class="score-card" tabindex="0" role="gridcell"
+                         aria-label="Time ${formatTime(score.timestamp)}">
+                        <div class="score-time">${formatTime(score.timestamp)}</div>
+                    </div>
+                `;
+                scoresGrid.appendChild(row);
+            });
+        }
+
         function loadDailyScores(date) {
             fetch(`/get_daily_scores?date=${date}`)
                 .then(response => response.json())
                 .then(data => {
-                    const scoresGrid = document.getElementById('scoresGrid');
-                    scoresGrid.innerHTML = '';
-                    
-                    if (data.scores.length === 0) {
-                        scoresGrid.innerHTML = `
-                            <div class="score-row">
-                                <div class="score-card" tabindex="0" role="gridcell" colspan="3"
-                                     aria-label="No scores found for this date">
-                                    No scores found for this date
-                                </div>
-                            </div>
-                        `;
-                        return;
-                    }
-                    
-                    data.scores.forEach((score, index) => {
-                        const row = document.createElement('div');
-                        row.className = 'score-row';
-                        row.innerHTML = `
-                            <div class="score-card" tabindex="0" role="gridcell"
-                                 aria-label="Position ${index + 1}">
-                                <div class="score-position">#${index + 1}</div>
-                            </div>
-                            <div class="score-card" tabindex="0" role="gridcell"
-                                 aria-label="Score ${score.score}">
-                                <div class="score-value">${score.score}</div>
-                            </div>
-                            <div class="score-card" tabindex="0" role="gridcell"
-                                 aria-label="Time ${formatTime(score.timestamp)}">
-                                <div class="score-time">${formatTime(score.timestamp)}</div>
-                            </div>
-                        `;
-                        scoresGrid.appendChild(row);
-                    });
+                    updateScores(data.scores);
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -246,16 +256,25 @@
         document.getElementById('dateSelect').value = today;
         loadDailyScores(today);
 
+        // Initialize SSE connection
         const evtSource = new EventSource('/score_stream');
         
         evtSource.onmessage = function(event) {
             const data = JSON.parse(event.data);
-            updateScoresDisplay(data);  // Make sure you have this function defined
+            updateScores(data.top_scores);
         };
 
         evtSource.onerror = function(err) {
             console.error("EventSource failed:", err);
             evtSource.close();
+            // Try to reconnect after 5 seconds
+            setTimeout(() => {
+                const newEventSource = new EventSource('/score_stream');
+                evtSource.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    updateScores(data.top_scores);
+                };
+            }, 5000);
         };
 
         // Clean up EventSource when leaving the page
