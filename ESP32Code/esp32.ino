@@ -240,7 +240,6 @@ void runGame() {
       if (onOffButtonState == HIGH) {
         Serial.println("Game stopped by user.");
         shutdownBuzz();
-        sendGameResult(gameRound);
         displayDigit(0);
         userIsCorrect = 0;
         gameRound = 10;
