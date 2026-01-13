@@ -16,7 +16,7 @@ We built a Simon Says game with three core accessibility features:
 
 The game also runs slower than commercial versions to accommodate different learning speeds.
 
-![Casing](content\casing.jpg)
+![Casing](content/casing.jpg)
 
 ## Hardware
 
@@ -43,7 +43,7 @@ A local Flask server displays real-time scores:
 - **Top Scores**: All-time top 10 players
 - Updates live as games finish
 
-![LeaderBoard](content\learderboard.jpg)
+![LeaderBoard](content/learderboard.jpg)
 ### Running the Website
 
 ```bash
